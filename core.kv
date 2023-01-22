@@ -1,0 +1,21 @@
+<AIFx>:
+    size_hint: None, None
+    pos_hint: {"center_x": 0.5, "center_y": 0.6}
+
+
+
+<RootWidget>:
+    aifx: aifx.__self__
+    MDScreen:
+        md_bg_color: "teal"
+        AIFx:
+            id: aifx
+
+        MDRaisedButton:
+            text: "Say Something"
+            pos_hint: {"center_x": 0.5, "top": 0.25}
+            size_hint: (0.3, 0.075)
+            disabled_color: "white"
+            md_bg_color: "indigo"
+            md_bg_color_disabled: "red"
+            on_release: aifx.talk(self)
