@@ -50,9 +50,9 @@ class AIFx(MDGridLayout):
 
         with self.canvas.after:
             # Color
-            Color(99/255, 233/255, 203/255, 0.7)
+            self.oc = Color(99/255, 233/255, 203/255, 0.7)
             self.background_el = Ellipse(pos=self.pos)
-            Color(29/255, 120/255, 115/255, 0.9)
+            self.ic = Color(29/255, 120/255, 115/255, 0.9)
             self.foreground_el = Ellipse(pos=self.pos)
 
         self.bind(pos=self.config_out_circle)
@@ -73,7 +73,7 @@ class AIFx(MDGridLayout):
     def talk(self, btn: kivymd.uix.button.MDRaisedButton):
         if self.IS_MIC_ACTIVE:
             btn.text = "Say Something!"
-            btn.md_bg_color = "indigo"
+            btn.md_bg_color = "#219ebc"
             self.IS_MIC_ACTIVE = False
         else:
             t1 = Thread(target=self.record)
