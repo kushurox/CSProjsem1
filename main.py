@@ -3,8 +3,14 @@ import wave
 
 import kivymd.uix.button
 import numpy as np
+from kivy.clock import mainthread
 from kivy.config import Config
 
+import pyttsx3
+
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id)
 
 Config.set('graphics', 'width', '800')
 Config.set('graphics', 'height', '600')
@@ -18,6 +24,7 @@ from kivymd.uix.screenmanager import MDScreenManager
 from kivy.core.window import Window
 from threading import Thread
 import speech_recognition
+from kivy.properties import NumericProperty
 
 import pyaudio
 
@@ -38,7 +45,7 @@ class AIFx(MDGridLayout):
     def __init__(self, *args, **kwargs):
         super(AIFx, self).__init__(*args, **kwargs)
 
-        self.scale = 1.2
+        self.apply_property(scale=NumericProperty(1.2))
         self.size = 300, 300
 
         with self.canvas.after:
@@ -51,14 +58,15 @@ class AIFx(MDGridLayout):
         self.bind(pos=self.config_out_circle)
 
         self.bind(pos=self.config_in_circle)
+        self.bind(scale=self.config_in_circle)
 
-    def config_in_circle(self, x, y):
+    def config_in_circle(self, *args):
         self.foreground_el.size = (self.size[0]/self.scale, self.size[1]/self.scale)
         dist_x = abs((self.foreground_el.size[0] - self.size[0])/2)
         dist_y = abs((self.foreground_el.size[1] - self.size[1]) / 2)
         self.foreground_el.pos = (self.pos[0] + dist_x, self.pos[1] + dist_y)
 
-    def config_out_circle(self, x, y):
+    def config_out_circle(self,*args):
         self.background_el.size = self.size
         self.background_el.pos = self.pos
 
@@ -88,24 +96,36 @@ class AIFx(MDGridLayout):
             data = np.frombuffer(data, dtype="int16")
             # print(len(data))
             rms = math.sqrt(abs(pow(data, 2).sum()/len(data)))
-            print(rms)
+            norm_rms = (rms/100) + 2
+            print(rms, norm_rms)
+            self.updater(norm_rms)
 
         stream.stop_stream()
         stream.close()
+        self.reset_cirle()
 
-        print(sr.recognize_sphinx(speech_recognition.AudioData(d, RATE, 4)))
-        # del d
+        engine.say(sr.recognize_sphinx(speech_recognition.AudioData(d, RATE, 4)))
+        engine.runAndWait()
+
+        del d
 
         # debug for myself
-        wf = wave.open("test.wav", 'wb')
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(p.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-        wf.writeframes(d)
-        wf.close()
+        # wf = wave.open("test.wav", 'wb')
+        # wf.setnchannels(CHANNELS)
+        # wf.setsampwidth(p.get_sample_size(FORMAT))
+        # wf.setframerate(RATE)
+        # wf.writeframes(d)
+        # wf.close()
 
         print("Exitting Thread")
 
+    @mainthread
+    def updater(self, norm_rms):
+        self.scale = norm_rms
+
+    @mainthread
+    def reset_cirle(self):
+        self.scale = 1.2
 
     def record2(self):
         r = speech_recognition.Recognizer()
