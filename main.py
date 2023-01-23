@@ -10,24 +10,26 @@ import pyttsx3
 
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
-engine.setProperty('voice', voices[1].id)
+
+MALE = 0
+FEMALE = 1
+
+engine.setProperty('voice', FEMALE)
 
 Config.set('graphics', 'width', '800')
 Config.set('graphics', 'height', '600')
-
 
 from kivy.graphics import Ellipse, Color
 from kivy.lang.builder import Builder
 from kivymd.app import MDApp
 from kivymd.uix.gridlayout import MDGridLayout
 from kivymd.uix.screenmanager import MDScreenManager
-from kivy.core.window import Window
-from threading import Thread
-import speech_recognition
+from kivymd.toast import toast
 from kivy.properties import NumericProperty
 
+from threading import Thread
+import speech_recognition
 import pyaudio
-
 
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -50,9 +52,9 @@ class AIFx(MDGridLayout):
 
         with self.canvas.after:
             # Color
-            self.oc = Color(99/255, 233/255, 203/255, 0.7)
+            self.oc = Color(99 / 255, 233 / 255, 203 / 255, 0.7)
             self.background_el = Ellipse(pos=self.pos)
-            self.ic = Color(29/255, 120/255, 115/255, 0.9)
+            self.ic = Color(29 / 255, 120 / 255, 115 / 255, 0.9)
             self.foreground_el = Ellipse(pos=self.pos)
 
         self.bind(pos=self.config_out_circle)
@@ -61,12 +63,12 @@ class AIFx(MDGridLayout):
         self.bind(scale=self.config_in_circle)
 
     def config_in_circle(self, *args):
-        self.foreground_el.size = (self.size[0]/self.scale, self.size[1]/self.scale)
-        dist_x = abs((self.foreground_el.size[0] - self.size[0])/2)
+        self.foreground_el.size = (self.size[0] / self.scale, self.size[1] / self.scale)
+        dist_x = abs((self.foreground_el.size[0] - self.size[0]) / 2)
         dist_y = abs((self.foreground_el.size[1] - self.size[1]) / 2)
         self.foreground_el.pos = (self.pos[0] + dist_x, self.pos[1] + dist_y)
 
-    def config_out_circle(self,*args):
+    def config_out_circle(self, *args):
         self.background_el.size = self.size
         self.background_el.pos = self.pos
 
@@ -95,8 +97,8 @@ class AIFx(MDGridLayout):
             d += data
             data = np.frombuffer(data, dtype="int16")
             # print(len(data))
-            rms = math.sqrt(abs(pow(data, 2).sum()/len(data)))
-            norm_rms = (rms/100) + 2
+            rms = math.sqrt(abs(pow(data, 2).sum() / len(data)))
+            norm_rms = (rms / 100) + 2
             # print(rms, norm_rms)
             self.updater(norm_rms)
 
@@ -104,7 +106,9 @@ class AIFx(MDGridLayout):
         stream.close()
         self.reset_cirle()
 
-        engine.say(sr.recognize_sphinx(speech_recognition.AudioData(d, RATE, 4)))
+        text = sr.recognize_sphinx(speech_recognition.AudioData(d, RATE, 4))
+        self.change_voice_line(text)
+        engine.say(text)
         engine.runAndWait()
 
         del d
@@ -124,6 +128,10 @@ class AIFx(MDGridLayout):
         self.scale = norm_rms
 
     @mainthread
+    def change_voice_line(self, text):
+        self.voice_line.text = text
+
+    @mainthread
     def reset_cirle(self):
         self.scale = 1.2
 
@@ -139,9 +147,11 @@ class AIFx(MDGridLayout):
         print("Recording over")
 
 
-
 class RootWidget(MDScreenManager):
-    pass
+    def set_voice(self, gender: MALE | FEMALE):
+        print(f"Voice changed to: {gender}")
+        toast(f"Voice set to {'MALE' if not gender else 'FEMALE'}")
+        engine.setProperty('voice', voices[gender].id)
 
 
 class PersonaAI(MDApp):

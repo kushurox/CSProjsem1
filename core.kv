@@ -8,8 +8,46 @@
     aifx: aifx.__self__
     MDScreen:
         md_bg_color: "#081d22"
+
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint: 0.25, 0.18
+            spacing: 10
+            pos_hint: {"top": 0.95, "x": 0.02}
+
+            MDLabel:
+                text: "Choose your Voice"
+                color: "white"
+                valign: "bottom"
+
+            MDSeparator:
+                height: 1
+                color: "white"
+
+            MDChip:
+                text: "Male"
+                size_hint: (0.5, 1)
+                md_bg_color: 0.6235294117647059, 0.12549019607843137, 0.9411764705882353
+                text_color: 0, 0, 0, 1
+                icon_left: "gender-male"
+                elevation: 2
+                on_release: root.set_voice(0)
+
+            MDChip:
+                text: "Female"
+                size_hint: (0.5, 1)
+                md_bg_color: 0.6235294117647059, 0.12549019607843137, 0.9411764705882353
+                text_color: 0, 0, 0, 1
+                icon_left: "gender-female"
+                elevation: 2
+                on_release: root.set_voice(1)
+
+
+
+
         AIFx:
             id: aifx
+            voice_line: voice_line.__self__
 
         MDRaisedButton:
             text: "Say Something"
@@ -20,3 +58,8 @@
             md_bg_color: "#219ebc"
             md_bg_color_disabled: "red"
             on_release: aifx.talk(self)
+
+        MDTextField:
+            id: voice_line
+            hint_text: "What you say will appear here"
+            mode: "fill"
