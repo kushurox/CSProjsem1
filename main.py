@@ -1,3 +1,7 @@
+"""
+Project started on 19th of January 2023
+"""
+
 import math
 import wave
 
@@ -58,11 +62,19 @@ class AIFx(MDGridLayout):
             self.foreground_el = Ellipse(pos=self.pos)
 
         self.bind(pos=self.config_out_circle)
-
         self.bind(pos=self.config_in_circle)
         self.bind(scale=self.config_in_circle)
+        # To update the vertex instructions based on voice (which affects scale)
+        # refer to self.record for details
 
     def config_in_circle(self, *args):
+        """
+        Positions the Circles appropriately by calculating the distance between their centers and offsetting their pos
+        by the distance
+        Author: Kushal Sai
+        :param args:
+        :return:
+        """
         self.foreground_el.size = (self.size[0] / self.scale, self.size[1] / self.scale)
         dist_x = abs((self.foreground_el.size[0] - self.size[0]) / 2)
         dist_y = abs((self.foreground_el.size[1] - self.size[1]) / 2)
@@ -85,6 +97,13 @@ class AIFx(MDGridLayout):
             t1.start()
 
     def record(self):
+        """
+        Opens an audio stream using Mic as Input.
+        This function doesn't run in the main thread, so you must be careful when working with main thread resources
+        This function is also responsible for Updating the diameter of the cool circle you see xD
+        Author: Kushal Sai
+        :return:
+        """
         stream = p.open(format=FORMAT,
                         channels=CHANNELS,
                         rate=RATE,
@@ -98,7 +117,7 @@ class AIFx(MDGridLayout):
             data = np.frombuffer(data, dtype="int16")
             # print(len(data))
             rms = math.sqrt(abs(pow(data, 2).sum() / len(data)))
-            norm_rms = (rms / 100) + 2
+            norm_rms = (rms / 100) + 2  # offsetting normalized rms by 2 for visual reasons
             # print(rms, norm_rms)
             self.updater(norm_rms)
 
@@ -109,23 +128,28 @@ class AIFx(MDGridLayout):
         text = sr.recognize_sphinx(speech_recognition.AudioData(d, RATE, 4))
         self.change_voice_line(text)
         engine.say(text)
-        engine.runAndWait()
+        engine.runAndWait()  # Fortunately this code was ran in a different thread so it doesn't freeze the whole prog
 
         del d
 
-        # debug for myself
-        # wf = wave.open("test.wav", 'wb')
-        # wf.setnchannels(CHANNELS)
-        # wf.setsampwidth(p.get_sample_size(FORMAT))
-        # wf.setframerate(RATE)
-        # wf.writeframes(d)
-        # wf.close()
+        # d is a huge object, better to free it as soon as possible since i might add a command after this
+        # for doing some work
+
+        """
+        debug for myself - AUDIO TEST
+        wf = wave.open("test.wav", 'wb')
+        wf.setnchannels(CHANNELS)
+        wf.setsampwidth(p.get_sample_size(FORMAT))
+        wf.setframerate(RATE)
+        wf.writeframes(d)
+        wf.close()
+        """
 
         print("Exitting Thread")
 
     @mainthread
-    def updater(self, norm_rms):
-        self.scale = norm_rms
+    def updater(self, norm_rms):  # Since Kivy requires you to update graphics Context in its main thread we need this
+        self.scale = norm_rms  # Decorator
 
     @mainthread
     def change_voice_line(self, text):
@@ -134,17 +158,6 @@ class AIFx(MDGridLayout):
     @mainthread
     def reset_cirle(self):
         self.scale = 1.2
-
-    def record2(self):
-        r = speech_recognition.Recognizer()
-        mic = speech_recognition.Microphone()
-        with mic as source:
-            while self.IS_MIC_ACTIVE:
-                audio = r.listen(source)
-                print(audio.frame_data)
-                print(r.recognize_sphinx(audio))
-
-        print("Recording over")
 
 
 class RootWidget(MDScreenManager):
