@@ -3,15 +3,11 @@ Project started on 19th of January 2023
 """
 
 import math
-import random
-import wave
 
 import kivymd.uix.button
-import numpy as np
+import pyttsx3
 from kivy.clock import mainthread
 from kivy.config import Config
-
-import pyttsx3
 
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
@@ -36,6 +32,22 @@ from threading import Thread
 import speech_recognition
 import pyaudio
 
+import numpy as np
+from nltk.stem import WordNetLemmatizer
+
+lemmatizer = WordNetLemmatizer()
+from keras.models import load_model
+import json
+import pickle
+import nltk
+import random
+
+intents_json = json.loads(open('../intents.json').read())
+words = pickle.load(open('../words.pkl', 'rb'))
+classes = pickle.load(open('../classes.pkl', 'rb'))
+
+model = load_model("../chatbot_model.h5")
+
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
@@ -44,7 +56,6 @@ RATE = 44100
 p = pyaudio.PyAudio()
 
 sr = speech_recognition.Recognizer()
-
 
 jokes = [
     """What’s the best thing about Switzerland?
@@ -56,7 +67,6 @@ He’ll stop at nothing to avoid them.""",
     """You're not completely useless. You can always serve as a bad example.""",
     """I was wondering why the ball was getting bigger, then it hit me."""
 ]
-
 
 random_facts = [
     """Fern collecting was such a hot fad in the Victorian era that it even had a name: pteridomania.""",
@@ -71,6 +81,44 @@ random_facts = [
     soldiers in WWI."""
 ]
 
+
+def clean_up_sentence(sentence):
+    sentence_words = nltk.word_tokenize(sentence)
+    sentence_words = [lemmatizer.lemmatize(word.lower()) for word in sentence_words]
+    return sentence_words
+
+
+def bow(sentence, words, show_details=True):
+    sentence_words = clean_up_sentence(sentence)
+    bag = [0] * len(words)
+    for s in sentence_words:
+        for i, w in enumerate(words):
+            if w == s:
+                bag[i] = 1
+                if show_details:
+                    print("found in bag: %s" % w)
+    return (np.array(bag))
+
+
+def predict_class(sentence, model):
+    p = bow(sentence, words, show_details=False)
+    res = model.predict(np.array([p]))[0]
+    ERROR_THRESHOLD = 0.25
+    results = [[i, r] for i, r in enumerate(res) if r > ERROR_THRESHOLD]
+    results.sort(key=lambda x: x[1], reverse=True)
+    return_list = []
+    for r in results:
+        return_list.append({"intent": classes[r[0]], "probability": str(r[1])})
+    return return_list
+
+def getResponse(ints, intents_json):
+    tag = ints[0]['intent']
+    list_of_intents = intents_json['intents']
+    for i in list_of_intents:
+        if i['tag'] == tag:
+            result = random.choice(i['responses'])
+            break
+    return result
 
 def random_joke(*args):
     engine.say(random.choice(jokes))
@@ -100,9 +148,6 @@ intent_map = {
     "timer": timer,
     "intro": introduction
 }
-
-
-
 
 
 class AIFx(MDGridLayout):
@@ -187,11 +232,12 @@ class AIFx(MDGridLayout):
 
         text = sr.recognize_sphinx(speech_recognition.AudioData(d, RATE, 4))
         self.change_voice_line(text)
-        engine.say(text)
-        engine.runAndWait()  # Fortunately this code was ran in a different thread so it doesn't freeze the whole prog
+        # Fortunately this code was ran in a different thread so it doesn't freeze the whole prog
 
-        intent = "joke"
-        intent_map[intent]()
+        intents = predict_class(text, model)
+        response = getResponse(intents, intents_json)
+        engine.say(response)
+        engine.runAndWait()
 
         del d
 

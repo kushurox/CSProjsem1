@@ -1,0 +1,30 @@
+{"intents": [
+        {"tag": "greeting",
+         "patterns": ["Hi there", "How are you", "Is anyone there?","Hey","Hola", "Hello", "Good day"],
+         "responses": ["Hello, thanks for asking", "Good to see you again", "Hi there, how can I help?"],
+         "context": [""]
+        },
+        {"tag": "introduction",
+         "patterns": ["Who are you", "What are you", "What can you do" , "What is you job", "Are you human" , "Describe yourself"],
+         "responses": ["Hello , My name is kushal pattanaik designed by kushal , milind and hrishikesh of E section to make you laugh with a joke or hit you with a random fact you might have never heard of"],
+         "context": [""]
+        },
+
+        {"tag": "random facts",
+         "patterns": ["Tell me something", "Say something random", "Tell me something interesting","Suprise me","Entertain me", "Tell me something i dont know"],
+         "responses": ["Fern collecting was such a hot fad in the Victorian era that it even had a name  pteridomania", "Mr. Rogers always mentioned out loud that he was feeding his fish because a young blind viewer once asked him to do so. She wanted to know the fish were OK."
+          , "Those tiny seeds on the outside of a strawberry aren't seeds--those are actually little tiny fruits!","When your inner voice speaks in your head, it triggers small muscle movements in your larynx",
+         "National Donut Day originally started as a way to honor Salvation Army volunteers who served donuts to soldiers in world war one" , 
+         "Mark Twain was born in 1835, a year in which Halley’s comet was visible from Earth. In 1909, he said, I came in with Halley’s comet...and I expect to go out with it. When he died on April 21, 1910, the comet was  again visible in the night sky"],
+         "context": [""]
+        },
+
+        {"tag": "jokes",
+         "patterns": ["I am bored", "Tell me a joke", "Say something funny","Make me laugh","I am sad , make me happy"],
+         "responses": ["What kind of shoes does a burglar wear  sneakers","What’s the best thing about Switzerland? I don’t know, but the flag is a big plus","Did you hear about the mathematician who’s afraid of negative numbers? He’ll stop at nothing to avoid them",
+        "I saw Usain Bolt sprinting around the track shouting, Why did the chicken cross the road? It was a running joke" , "You're not completely useless. You can always serve as a bad example.","I was wondering why the ball was getting bigger, then it hit me"],
+         "context": [""]
+        }
+        
+   ]
+}
